@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d46a0d09-fecd-4469-81f4-7aece24a6246" name="Default" comment="" />
+    <list default="true" id="d46a0d09-fecd-4469-81f4-7aece24a6246" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/../.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/workspace.xml" afterDir="false" />
+    </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -48,6 +50,9 @@
       <find>show</find>
     </findStrings>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
@@ -88,6 +93,7 @@
     <option name="width" value="1289" />
     <option name="height" value="732" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
@@ -97,26 +103,8 @@
         <subPane>
           <expand>
             <path>
-              <item name="hotwaxdatascience" type="b2602c69:ProjectViewProjectNode" />
+              <item name="." type="b2602c69:ProjectViewProjectNode" />
               <item name="hotwaxdatascience" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="hotwaxdatascience" type="b2602c69:ProjectViewProjectNode" />
-              <item name="hotwaxdatascience" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="hotwaxdatascience" type="b2602c69:ProjectViewProjectNode" />
-              <item name="hotwaxdatascience" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="hotwaxdatascience" type="b2602c69:ProjectViewProjectNode" />
-              <item name="hotwaxdatascience" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -212,7 +200,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="47" y="-14" width="1320" height="783" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info anchor="right" id="Palette" order="3" />
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -222,12 +209,12 @@
       <window_info anchor="right" id="Capture Analysis" order="3" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="right" id="Maven Projects" order="3" visible="true" weight="0.25037935" />
-      <window_info anchor="bottom" id="Version Control" order="7" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3739003" />
+      <window_info anchor="bottom" id="Version Control" order="7" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.3739003" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info id="Capture Tool" order="2" />
       <window_info id="Designer" order="2" />
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.146434" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.146434" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info id="UI Designer" order="2" />
