@@ -5,6 +5,7 @@ import org.apache.spark.ml.Pipeline;
 import org.apache.spark.ml.PipelineModel;
 import org.apache.spark.ml.PipelineStage;
 import org.apache.spark.ml.classification.LogisticRegression;
+import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator;
 import org.apache.spark.ml.feature.StringIndexer;
 import org.apache.spark.ml.feature.VectorAssembler;
 import org.apache.spark.sql.Dataset;
@@ -84,7 +85,7 @@ public class AppMain {
 
         VectorAssembler assembler = new VectorAssembler().setInputCols(new String[]{"PassengerId", "Pclass", "Age", "SibSp", "Parch", "NameIndex", "genderIndex", "TicketIndex", "FareIndex", "CabinIndex", "EmbarkedIndex"}).setOutputCol("features");
 
-        LogisticRegression logisticRegression = new LogisticRegression().setMaxIter(10)
+        LogisticRegression logisticRegression = new LogisticRegression().setMaxIter(20)
                 .setRegParam(0.3)
                 .setElasticNetParam(0.8);
 
@@ -129,7 +130,17 @@ public class AppMain {
         passengerPrediction.where("predictions = '0'").show(20);
 
         // survived passengers
-        passengerPrediction.where("predictions = '0'").show(20);
+        passengerPrediction.where("predictions = '1'").show(20);
 
+        /*
+        // need label column in "test" data to execute below code
+
+        BinaryClassificationEvaluator evaluator = new BinaryClassificationEvaluator()
+                                                                .setRawPredictionCol("rawPrediction");
+        evaluator.evaluate(predictions);
+
+        System.out.println("  ============================= \n" + evaluator.getMetricName());
+
+        */
     }
 }
