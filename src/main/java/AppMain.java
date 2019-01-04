@@ -45,33 +45,51 @@ public class AppMain {
                 .format("com.databricks.spark.csv")
                 .schema(schema)
                 .option("Header", "true")
-                .load("/tmp/train.csv")
+                .load("/home/arham/IdeaProjects/hotwaxdatascience/data/train.csv")
                 .na()
                 .drop();
+        //.select("PassengerId", "label", "Pclass", "Gender", "Age", "SibSp", "Parch", "Fare", "Cabin", "Embarked")
 
-        trainDF.show(20);
+        //trainDF.show(20);
         //trainDF.printSchema();
 
+        /*
 
-        StringIndexer nameIndex = new StringIndexer()
-                .setInputCol("Name")
-                .setOutputCol("NameIndex")
-                .setHandleInvalid("keep");
+        System.out.println("======== % of male survived\n" + ((float) trainDF.where("Gender='male' and label='1'").count()/ (float) trainDF.count()) * 100);
+
+        System.out.println("======== % of female survived\n" + ((float) trainDF.where("Gender='female' and label='1'").count()/ (float) trainDF.count()) * 100);
+
+        System.out.println("======== % of male not survived\n" + ((float) trainDF.where("Gender='male' and label='0'").count()/ (float) trainDF.count()) * 100);
+
+        System.out.println("======== % of female not survived\n" + ((float) trainDF.where("Gender='female' and label='0'").count()/ (float) trainDF.count()) * 100);
+
+        System.out.println("======== % of people travel in class 1 and survived \n" + (float) trainDF.where("Pclass='1' and label='1'").count()/(float) trainDF.count() * 100);
+
+        System.out.println("======== % of people travel in class 2 and survived \n" + (float) trainDF.where("Pclass='2' and label='1'").count()/(float) trainDF.count() * 100);
+
+        System.out.println("======== % of people travel in class 3 and survived \n" + (float) trainDF.where("Pclass='3' and label='1'").count()/(float) trainDF.count() * 100);
+
+        System.out.println("======== % of people embarked in port C and survived\n " + (float) trainDF.where("Embarked='C' and label='1'").count()/(float) trainDF.count() * 100);
+
+        System.out.println("======== % of people embarked in port S and survived\n " + (float) trainDF.where("Embarked='S' and label='1'").count()/(float) trainDF.count() * 100);
+
+        System.out.println("======== % of people embarked in port Q and survived\n " + (float) trainDF.where("Embarked='Q' and label='1'").count()/(float) trainDF.count() * 100);
+
+        */
+
+        Dataset<Row> train = trainDF.drop("Name", "Ticket");
 
         StringIndexer genderIndex = new StringIndexer()
                 .setInputCol("Gender")
                 .setOutputCol("genderIndex")
                 .setHandleInvalid("keep");
 
-        StringIndexer ticketIndex = new StringIndexer()
-                .setInputCol("Ticket")
-                .setOutputCol("TicketIndex")
-                .setHandleInvalid("keep");
-
+        /*
         StringIndexer fareIndex = new StringIndexer()
                 .setInputCol("Fare")
                 .setOutputCol("FareIndex")
                 .setHandleInvalid("keep");
+        */
 
         StringIndexer cabinIndex = new StringIndexer()
                 .setInputCol("Cabin")
@@ -83,15 +101,16 @@ public class AppMain {
                 .setOutputCol("EmbarkedIndex")
                 .setHandleInvalid("keep");
 
-        VectorAssembler assembler = new VectorAssembler().setInputCols(new String[]{"PassengerId", "Pclass", "Age", "SibSp", "Parch", "NameIndex", "genderIndex", "TicketIndex", "FareIndex", "CabinIndex", "EmbarkedIndex"}).setOutputCol("features");
+        VectorAssembler assembler = new VectorAssembler().setInputCols(new String[]{ "Pclass", "Age", "SibSp", "Parch", "genderIndex", "Fare", "CabinIndex", "EmbarkedIndex"}).setOutputCol("features");
 
-        LogisticRegression logisticRegression = new LogisticRegression().setMaxIter(20)
+        LogisticRegression logisticRegression = new LogisticRegression()
+                .setMaxIter(30)
                 .setRegParam(0.3)
                 .setElasticNetParam(0.8);
 
         Pipeline pipeline = new Pipeline()
-                .setStages(new PipelineStage[] { nameIndex, genderIndex, ticketIndex, fareIndex, cabinIndex, embarkedIndex, assembler, logisticRegression });
-        PipelineModel model = pipeline.fit(trainDF);
+                .setStages(new PipelineStage[] { genderIndex, cabinIndex, embarkedIndex, assembler, logisticRegression });
+        PipelineModel model = pipeline.fit(train);
 
 
         // Evaluation
@@ -116,13 +135,14 @@ public class AppMain {
                 .format("com.databricks.spark.csv")
                 .option("Header", "true")
                 .schema(testSchema)
-                .load("/tmp/test.csv")
+                .load("/home/arham/IdeaProjects/hotwaxdatascience/data/test.csv")
                 .na()
                 .drop();
 
-        Dataset<Row> predictions = model.transform(test);
+        Dataset<Row> predictions = model.transform(test.drop("Name", "Ticket"));
 
         //predictions.show(20);
+        predictions.select("rawPrediction").show(20);
 
         Dataset<Row> passengerPrediction = predictions.withColumn("predictions", predictions.col("prediction").cast("long")).select("PassengerId", "predictions");
 
@@ -132,10 +152,11 @@ public class AppMain {
         // survived passengers
         passengerPrediction.where("predictions = '1'").show(20);
 
+
         /*
         // need label column in "test" data to execute below code
 
-        BinaryClassificationEvaluator evaluator = new BinaryClassificationEvaluator()
+        logistic  evaluator = new BinaryClassificationEvaluator()
                                                                 .setRawPredictionCol("rawPrediction");
         evaluator.evaluate(predictions);
 
