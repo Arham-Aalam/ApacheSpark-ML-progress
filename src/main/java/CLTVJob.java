@@ -6,6 +6,8 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.ml.evaluation.RegressionEvaluator;
 import org.apache.spark.ml.feature.VectorAssembler;
+import org.apache.spark.ml.linalg.DenseVector;
+import org.apache.spark.ml.linalg.SparseVector;
 import org.apache.spark.ml.linalg.Vector;
 import org.apache.spark.ml.linalg.Vectors;
 import org.apache.spark.ml.regression.LinearRegression;
@@ -14,8 +16,10 @@ import org.apache.spark.ml.regression.LinearRegressionSummary;
 import org.apache.spark.ml.regression.LinearRegressionTrainingSummary;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.*;
+import scala.Function2;
 import scala.collection.Seq;
 import scala.collection.Seq$;
+import scala.runtime.BoxedUnit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +30,7 @@ public class CLTVJob {
 	public static SparkContext sc;
 	public static SQLContext sqlContext;
 	public static SparkSession spark;
+	public static LinearRegressionModel lrModel;
 
 	public static void main(String[] args) {
 		
@@ -39,21 +44,7 @@ public class CLTVJob {
 
 
 /*
-		// Generating Data
-		//dataGe();
-		Dataset<Row>  data = spark.read().format("csv").option("header", "true").option("inferSchema", "true").load("data/history.csv");
-		Dataset<Row> rawData = generateDF(1101, 1600);
-		//rawData.show(20);
-		Dataset<Row> finalRaw = data.union(rawData);
-		//finalRaw.repartition(1).write().csv("data/customerHistory");
-		finalRaw
-				.repartition(1)
-				.write()
-				.format("com.databricks.spark.csv")
-				.option("header", "true")
-				.save("data/customerHistory");
-
-		finalRaw.show(20);
+		generateTrainingData();
 */
 
 		// Loading Generated Data
@@ -82,7 +73,7 @@ public class CLTVJob {
 		lr.setPredictionCol("predictions");
 
 		// fitting the model
-		LinearRegressionModel lrModel = lr.fit(vectorDataTops);
+		lrModel = lr.fit(vectorDataTops);
 
 		// Print the coefficients and intercept for linear regression.
 		System.out.println("Coefficients: " + lrModel.coefficients() + " Intercept: " + lrModel.intercept());
@@ -121,15 +112,16 @@ public class CLTVJob {
 		*/
 
 
-		// Testing with less features
-		Dataset<Row> testingLessFeatures = data.limit(1);
+		// Testing with less features having zero values
+		Dataset<Row> testingLessFeatures = data.limit(150);
 
 		Dataset<Row> testDataLessFeatures = testingLessFeatures
 				.withColumn("MONTH_4_new", testingLessFeatures.col("MONTH_4").multiply(0))
 				.withColumn("MONTH_5_new", testingLessFeatures.col("MONTH_5").multiply(0))
 				.withColumn("MONTH_6_new", testingLessFeatures.col("MONTH_6").multiply(0))
 				.drop(testingLessFeatures.col("CLV"))
-				.withColumn("CLV", testingLessFeatures.col("MONTH_1").plus(testingLessFeatures.col("MONTH_2")).plus(testingLessFeatures.col("MONTH_3")).multiply(10));
+				.withColumn("CLV", testingLessFeatures.col("MONTH_1").plus(testingLessFeatures.col("MONTH_2")).plus(testingLessFeatures.col("MONTH_3")).multiply(15));
+
 
 		testDataLessFeatures.show();
 
@@ -138,22 +130,45 @@ public class CLTVJob {
 		Dataset<Row> testData = vectorAssemblerTest.transform(testDataLessFeatures);
 
 
-		System.out.println("======================================== Test Results with less features =====================================");
+		System.out.println("======================================== Test Results with less features having zero =====================================");
 
 		Dataset<Row> predictions = lrModel.transform(testData);
 		//predictions.show(20);
 		predictions.show(false);
 
-		//LinearRegressionSummary evaluateResult = lrModel.evaluate(predictions);
 
-		RegressionEvaluator regressionEvaluator = new RegressionEvaluator().setMetricName("r2");
-		regressionEvaluator.setPredictionCol("predictions");
-		regressionEvaluator.setLabelCol("CLV");
-		data.describe().show();
+		// Test Summary
+		LinearRegressionSummary lrSummary = lrModel.evaluate(testData);
 
 		// test results
-		System.out.println("r2: " + regressionEvaluator.evaluate(predictions));
+		//System.out.println("r2: " + regressionEvaluator.evaluate(predictions));
+		System.out.println("RMSE : " + lrSummary.rootMeanSquaredError());
 
+
+
+		//****************************  Testing with new generated data ***********************************
+
+		Dataset<Row> unseenData = generateDF(1, 200);
+
+		VectorAssembler vectorAssemblerTestForUnseenData = new VectorAssembler();
+		vectorAssemblerTestForUnseenData.setInputCols(new String[]{"MONTH_1", "MONTH_2", "MONTH_3", "MONTH_4", "MONTH_5", "MONTH_6"}).setOutputCol("features");
+		Dataset<Row> unseenVectorTestData = vectorAssemblerTestForUnseenData.transform(unseenData);
+
+		Dataset<Row> unseenDataPredictions = lrModel.transform(unseenVectorTestData);
+		unseenDataPredictions.show(false);
+
+		LinearRegressionSummary unseenTestDataSummary = lrModel.evaluate(unseenVectorTestData);
+
+		// unseen test results
+		System.out.println("RMSE : " + unseenTestDataSummary.rootMeanSquaredError());
+
+		makePrediction(new double[]{20.0, 80.0, 40.0, 120.0, 180.0, 40.0});
+
+		makePrediction(new double[]{10.0, 10.0, 10.0, 10.0, 10.0, 10.0});
+
+		makePrediction(new double[]{45.0, 10.0, 80.0, 0.0, 0.0, 0.0});
+
+		makePrediction(new double[]{0.0, 0.0, 0.0, 120.0, 0.0, 40.0});
 
 		spark.stop();
 	}
@@ -257,5 +272,29 @@ public class CLTVJob {
 		Dataset<Row> df = spark.createDataFrame(rows, structType);
 
 		df.show(20);
+	}
+
+	public static void generateTrainingData() {
+		// Generating Data
+		//dataGe();
+		Dataset<Row>  data = spark.read().format("csv").option("header", "true").option("inferSchema", "true").load("data/history.csv");
+		Dataset<Row> rawData = generateDF(1101, 1600);
+		//rawData.show(20);
+		Dataset<Row> finalRaw = data.union(rawData);
+		//finalRaw.repartition(1).write().csv("data/customerHistory");
+		finalRaw
+				.repartition(1)
+				.write()
+				.format("com.databricks.spark.csv")
+				.option("header", "true")
+				.save("data/customerHistory");
+
+		finalRaw.show(20);
+	}
+
+	public static void makePrediction(double[] featureValues) {
+
+		double predictValue = lrModel.predict(new DenseVector(featureValues));
+		System.out.println("Your Prediction : " + predictValue);
 	}
 }
