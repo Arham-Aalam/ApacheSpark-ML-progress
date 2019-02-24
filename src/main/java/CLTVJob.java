@@ -48,7 +48,7 @@ public class CLTVJob {
 */
 
 		// Loading Generated Data
-		Dataset<Row>  data = spark.read().format("csv").option("header", "true").option("inferSchema", "true").load("data/customerHistory.csv");
+		Dataset<Row>  data = spark.read().format("csv").option("header", "true").option("inferSchema", "true").load("data/customerHistory.csv").union(generateDF(1601, 1800));
 		data.show(20);
 		data.printSchema();
 
@@ -162,6 +162,8 @@ public class CLTVJob {
 		// unseen test results
 		System.out.println("RMSE : " + unseenTestDataSummary.rootMeanSquaredError());
 
+		unseenTestDataSummary.residuals();
+
 		makePrediction(new double[]{20.0, 80.0, 40.0, 120.0, 180.0, 40.0});
 
 		makePrediction(new double[]{10.0, 10.0, 10.0, 10.0, 10.0, 10.0});
@@ -238,9 +240,9 @@ public class CLTVJob {
 			int m1 = random.nextInt(201);
 			int m2 = random.nextInt(201);
 			int m3 = random.nextInt(201);
-			int m4 = random.nextInt(201);
-			int m5 = random.nextInt(201);
-			int m6 = random.nextInt(201);
+			int m4 = random.nextInt(201) * random.nextInt(1);
+			int m5 = random.nextInt(201) * random.nextInt(1);
+			int m6 = random.nextInt(201) * random.nextInt(1);
 			int clv = (m1 + m2 + m3 + m4 + m5 + m6) * 15;
 			rows.add(RowFactory.create(
 					row,
